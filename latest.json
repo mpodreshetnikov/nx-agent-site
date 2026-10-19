@@ -1,0 +1,12 @@
+{
+  "version": "0.5.6",
+  "published": "2026-10-19",
+  "notes": "Скиллы агента читаются через nx_skill_read (без оболочки; чинит Codex), Skill/TodoWrite разрешены для Claude Code",
+  "package": {
+    "url": "NxAgent-0.5.6.zip",
+    "sha256": "d2e638ecf2c2f1e9a45fe08b18732e9688aad31e23c7cf563a405cff805ef2d4",
+    "size": 4433134
+  },
+  "min_bootstrap": "1.0.0",
+  "download_url": "https://firsts3.ru/nx-agent-updates/nx-agent/NxAgent-0.5.6.zip"
+}

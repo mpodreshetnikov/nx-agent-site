@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NX Agent — ИИ-агент внутри Siemens NX</title>
+<meta name="description" content="Плагин для Siemens NX: ИИ-агент строит, правит и проверяет модель через MCP-инструменты nx_*. Чат прямо в NX, Claude Code или Codex.">
+<meta property="og:title" content="NX Agent — ИИ-агент внутри Siemens NX">
+<meta property="og:description" content="Опиши деталь словами — агент построит её в NX, измерит и проверит. Версия 0.5.6.">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/png" href="icon.png">
+<style>
+  :root {
+    --bg: #f6f7f9; --surface: #ffffff; --text: #14171c; --muted: #5b6573; --border: #e2e6ec;
+    --accent: #1f6feb; --accent-ink: #ffffff; --accent-soft: #e8f0fe; --code: #eef1f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1116; --surface: #161b22; --text: #e6e9ee; --muted: #9aa4b2; --border: #262d37;
+      --accent: #4c8dff; --accent-ink: #0b0e13; --accent-soft: #152238; --code: #1c222b;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  a { color: var(--accent); }
+  code { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: .9em; background: var(--code); padding: .1em .35em; border-radius: 4px; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+
+  header.top { display: flex; align-items: center; gap: 10px; padding: 18px 0; }
+  header.top img { width: 28px; height: 28px; }
+  header.top .name { font-weight: 700; letter-spacing: -.01em; }
+  header.top nav { margin-left: auto; display: flex; gap: 18px; font-size: 15px; }
+  header.top nav a { color: var(--muted); text-decoration: none; }
+  header.top nav a:hover { color: var(--text); }
+
+  .hero { padding: 56px 0 40px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; align-items: center; }
+  .hero h1 { font-size: clamp(32px, 5vw, 50px); line-height: 1.1; letter-spacing: -.02em; margin: 0 0 16px; }
+  .hero p.lead { font-size: 19px; color: var(--muted); margin: 0 0 28px; max-width: 34em; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px; background: var(--accent); color: var(--accent-ink);
+    font-weight: 600; font-size: 17px; text-decoration: none; padding: 14px 22px; border-radius: 10px;
+  }
+  .btn:hover { filter: brightness(1.07); }
+  .btn svg { width: 20px; height: 20px; }
+  .meta { margin-top: 14px; font-size: 14px; color: var(--muted); }
+  .meta span + span::before { content: "·"; margin: 0 8px; }
+
+  .chat {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px;
+    font-size: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.06);
+  }
+  .chat .msg { padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); margin-bottom: 12px; }
+  .chat .tool { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 12.5px; color: var(--muted); padding: 3px 0; }
+  .chat .tool b { color: var(--text); font-weight: 600; }
+  .chat .ok { color: #2da44e; }
+  .chat .answer { margin-top: 12px; }
+
+  section { padding: 44px 0; border-top: 1px solid var(--border); }
+  section h2 { font-size: 28px; letter-spacing: -.01em; margin: 0 0 8px; }
+  section p.sub { color: var(--muted); margin: 0 0 28px; max-width: 46em; }
+
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
+  .card h3 { margin: 0 0 6px; font-size: 17px; }
+  .card p { margin: 0; color: var(--muted); font-size: 15px; }
+
+  ol.steps { counter-reset: s; list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  ol.steps li { counter-increment: s; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
+  ol.steps li::before {
+    content: counter(s); display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent); font-weight: 700; margin-bottom: 10px;
+  }
+  ol.steps h3 { margin: 0 0 6px; font-size: 17px; }
+  ol.steps p { margin: 0; color: var(--muted); font-size: 15px; }
+
+  ul.req { margin: 0; padding-left: 20px; }
+  ul.req li { margin: 4px 0; }
+
+  .release { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .release .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; }
+  .release h3 { margin: 0; font-size: 20px; }
+  .release .notes { margin: 12px 0 0; color: var(--muted); }
+  .release .sha { margin-top: 12px; font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+
+  footer { padding: 28px 0 40px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--border); }
+
+  @media (max-width: 820px) {
+    .hero { grid-template-columns: 1fr; padding-top: 28px; }
+    .grid, ol.steps { grid-template-columns: 1fr; }
+    header.top nav { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <img src="icon.png" alt="">
+    <span class="name">NX Agent</span>
+    <nav>
+      <a href="#features">Возможности</a>
+      <a href="#install">Установка</a>
+      <a href="#download">Скачать</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <div>
+      <h1>ИИ-агент внутри Siemens&nbsp;NX</h1>
+      <p class="lead">Опиши деталь словами — агент построит её в NX, измерит, проверит и покажет скриншот.
+        Чат живёт рядом с моделью, а каждое изменение можно откатить.</p>
+      <a class="btn" href="https://firsts3.ru/nx-agent-updates/nx-agent/NxAgent-0.5.6.zip" download>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+        Скачать версию 0.5.6
+      </a>
+      <div class="meta"><span>19 октября 2026</span><span>ZIP, 4,2 МБ</span><span>Windows 11 · NX 2512</span></div>
+    </div>
+    <div class="chat" aria-label="Пример диалога">
+      <div class="msg">Создай блок 100×60×20, по центру верхней грани — сквозное отверстие Ø12. Проверь.</div>
+      <div class="tool"><b>nx_create_block</b> 100 × 60 × 20 <span class="ok">✓</span></div>
+      <div class="tool"><b>nx_create_hole</b> Ø12, сквозное, верхняя грань <span class="ok">✓</span></div>
+      <div class="tool"><b>nx_verify</b> габарит, 1 тело, грань R6, без ошибок <span class="ok">✓</span></div>
+      <div class="tool"><b>nx_screenshot</b> изометрия <span class="ok">✓</span></div>
+      <div class="answer">Готово: блок с отверстием Ø12 по центру, проверки пройдены. Откатить можно одним шагом.</div>
+    </div>
+  </div>
+</div>
+
+<section id="features">
+  <div class="wrap">
+    <h2>Что умеет</h2>
+    <p class="sub">Внутри NX поднимается MCP-сервер с семантическими инструментами <code>nx_*</code>, а окно чата запускает
+      Claude Code или OpenAI Codex как агентный рантайм. Агент сам проходит цикл «изучить → изменить → измерить → проверить → посмотреть».</p>
+    <div class="grid">
+      <div class="card"><h3>80+ инструментов NX</h3><p>Эскизы, экструзия, отверстия, скругления, оболочки, loft, sweep, массивы, поверхности, импорт STEP/STL.</p></div>
+      <div class="card"><h3>Проверка результата</h3><p>Измерения, габариты, число тел, ошибки обновления и скриншоты: агент проверяет, что получилось.</p></div>
+      <div class="card"><h3>Undo на каждый шаг</h3><p>Каждое изменение — чекпоинт. Режимы одобрения: спрашивать всегда, только о рискованном или не спрашивать.</p></div>
+      <div class="card"><h3>Выделение в чате</h3><p>Выделенные в NX грани и рёбра уходят в сообщение, <code>@</code>-упоминания объектов, ссылки в ответах подсвечивают модель.</p></div>
+      <div class="card"><h3>Claude Code и Codex</h3><p>Установка и вход в агента прямо из плагина, без терминала. Плагин не хранит пароли и токены.</p></div>
+      <div class="card"><h3>Любой MCP-клиент</h3><p>Сервер на <code>127.0.0.1:7421/mcp</code> подходит для Claude Code, Codex, OpenCode и других клиентов.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <div class="wrap">
+    <h2>Установка</h2>
+    <p class="sub">Права администратора и .NET SDK не нужны. Дальше плагин обновляется сам.</p>
+    <ol class="steps">
+      <li><h3>Скачай архив</h3><p><a href="https://firsts3.ru/nx-agent-updates/nx-agent/NxAgent-0.5.6.zip" download>NxAgent-0.5.6.zip</a> и распакуй в любую папку.</p></li>
+      <li><h3>Запусти Install.cmd</h3><p>Установщик скопирует плагин в <code>%LOCALAPPDATA%\nx-agent</code> и зарегистрирует его в NX.</p></li>
+      <li><h3>Открой NX</h3><p>Menu → AI Agent → Open AI Chat или <code>Ctrl+Shift+L</code>. Новые версии приходят баннером в чате.</p></li>
+    </ol>
+    <h3 style="margin:32px 0 8px;font-size:18px">Требования</h3>
+    <ul class="req">
+      <li>Windows 11 и Siemens Designcenter NX 2512 с лицензией <code>dotnet_author</code>.</li>
+      <li>.NET 8 Desktop Runtime и Microsoft Edge WebView2 Runtime (на Windows 11 уже есть).</li>
+      <li>Аккаунт Claude Code или OpenAI Codex; оба ставятся и авторизуются из плагина.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="download">
+  <div class="wrap">
+    <h2>Последняя версия</h2>
+    <div class="release">
+      <div class="row">
+        <h3>NX Agent 0.5.6 <span style="font-weight:400;color:var(--muted);font-size:15px">· 19 октября 2026</span></h3>
+        <a class="btn" href="https://firsts3.ru/nx-agent-updates/nx-agent/NxAgent-0.5.6.zip" download>Скачать ZIP, 4,2 МБ</a>
+      </div>
+      <p class="notes">Скиллы агента читаются через nx_skill_read (без оболочки; чинит Codex), Skill/TodoWrite разрешены для Claude Code</p>
+      <div class="sha">SHA-256: <code>d2e638ecf2c2f1e9a45fe08b18732e9688aad31e23c7cf563a405cff805ef2d4</code></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">NX Agent — сторонний плагин, не связан с Siemens. Siemens, NX и Designcenter — товарные знаки Siemens.</div>
+</footer>
+</body>
+</html>
