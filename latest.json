@@ -1,12 +1,12 @@
 {
-  "version": "0.5.6",
-  "published": "2026-10-19",
-  "notes": "Скиллы агента читаются через nx_skill_read (без оболочки; чинит Codex), Skill/TodoWrite разрешены для Claude Code",
+  "version": "0.5.7",
+  "published": "2026-10-21",
+  "notes": "Проверка обновлений раз в час, пока NX открыт; экспорт чата в HTML для поддержки; исправлены одобрения действий в Codex и ложный баннер «Codex не установлен»; bridge: поверхности с непрерывностью G1/G2",
   "package": {
-    "url": "NxAgent-0.5.6.zip",
-    "sha256": "d2e638ecf2c2f1e9a45fe08b18732e9688aad31e23c7cf563a405cff805ef2d4",
-    "size": 4433134
+    "url": "NxAgent-0.5.7.zip",
+    "sha256": "c33dc517ccb259ce2100a487d41a1ad1b75d612c02449a7cf50f4a4ee7a5e2d9",
+    "size": 4477030
   },
   "min_bootstrap": "1.0.0",
-  "download_url": "https://firsts3.ru/nx-agent-updates/nx-agent/NxAgent-0.5.6.zip"
+  "download_url": "https://firsts3.ru/nx-agent-updates/nx-agent/NxAgent-0.5.7.zip"
 }
