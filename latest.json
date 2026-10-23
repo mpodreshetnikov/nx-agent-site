@@ -1,12 +1,12 @@
 {
-  "version": "0.5.7",
-  "published": "2026-10-21",
-  "notes": "Проверка обновлений раз в час, пока NX открыт; экспорт чата в HTML для поддержки; исправлены одобрения действий в Codex и ложный баннер «Codex не установлен»; bridge: поверхности с непрерывностью G1/G2",
+  "version": "0.5.9",
+  "published": "2026-10-24",
+  "notes": "Codex по умолчанию: gpt-6.1-sol, effort low (выбрано по эвалу). Исправлено: пункт «по умолчанию» в чате сбрасывал дефолты модели и effort, и Claude Code шёл без Opus/high, а Codex без effort. Claude Code по умолчанию Opus 5.5, effort high; исправлено зависание хода при авто-разрешении инструментов. Пак агента: навык part-from-views (сначала габариты, затем вопрос про полость), триггеры навыков. Чат: одна живая строка статуса, фраза статуса пока агент думает, экспорт чата в HTML. Инструмент nx_export_file (STL). Симулированный пользователь эвала отвечает только по теме вопроса; реестр прогонов эвала в evals/history.",
   "package": {
-    "url": "NxAgent-0.5.7.zip",
-    "sha256": "c33dc517ccb259ce2100a487d41a1ad1b75d612c02449a7cf50f4a4ee7a5e2d9",
-    "size": 4477030
+    "url": "NxAgent-0.5.9.zip",
+    "sha256": "476a17c4d3f316026ce49a369c6b30cbf651a64ecfafc09f63bd11df7daf3a33",
+    "size": 4493335
   },
   "min_bootstrap": "1.0.0",
-  "download_url": "https://firsts3.ru/nx-agent-updates/nx-agent/NxAgent-0.5.7.zip"
+  "download_url": "https://firsts3.ru/nx-agent-updates/nx-agent/NxAgent-0.5.9.zip"
 }
